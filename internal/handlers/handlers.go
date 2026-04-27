@@ -18,15 +18,16 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	i, err := os.ReadFile("../index.html")
+	i, err := os.ReadFile("index.html")
 	if err != nil {
-		http.Error(w, "File reading error", http.StatusInternalServerError)
-		return
+		i, err = os.ReadFile("../index.html")
+		if err != nil {
+			http.Error(w, "File reading error", http.StatusInternalServerError)
+			return
+		}
 	}
-
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(i)
-
 }
 
 // хэндлер "/upload"
@@ -67,8 +68,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	// windows не давал сохранить файл из-за недопустимых символов в имени файла
 	name = strings.ReplaceAll(name, ":", "-")
 	name = strings.ReplaceAll(name, " ", "_")
-	opName := name + ext
 
+	tDir := os.TempDir()
+	opName := filepath.Join(tDir, name+ext)
 	err = os.WriteFile(opName, []byte(convertation), 0644)
 	if err != nil {
 		http.Error(w, "Error save file", http.StatusInternalServerError)
